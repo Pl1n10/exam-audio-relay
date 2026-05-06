@@ -43,8 +43,36 @@ Hardening notes for production:
 - Front the app with a reverse proxy or Tailscale Funnel — uvicorn is started with
   `--proxy-headers`
 - Add rate limiting in front of `/login` and `/s/{token}` (Caddy / Tailscale ACLs / fail2ban /
-  `slowapi`). Not implemented in-app.
+  `slowapi`). Not implemented in-app. See "Fail2Ban example" below for a minimal recipe.
 - PostgreSQL backups: see "Backups" section
+
+### Fail2Ban example (optional)
+
+Failed `POST /login` requests return HTTP 401, which makes them trivially detectable in any
+reverse-proxy access log. If the app is fronted by a proxy that logs status codes (Caddy, nginx,
+Traefik), a minimal Fail2Ban setup looks like this — adapt the `logpath` and `failregex` to your
+proxy's log format.
+
+`/etc/fail2ban/filter.d/exam-audio-relay.conf`:
+```ini
+[Definition]
+failregex = ^<HOST> .* "POST /login[^"]*" 401
+ignoreregex =
+```
+
+`/etc/fail2ban/jail.d/exam-audio-relay.local`:
+```ini
+[exam-audio-relay]
+enabled  = true
+filter   = exam-audio-relay
+logpath  = /var/log/caddy/access.log
+maxretry = 5
+findtime = 10m
+bantime  = 1h
+```
+
+This is a starting point, not a hardened policy — tune `maxretry`/`findtime`/`bantime` to your
+threat model and verify the regex actually matches your proxy's log lines before relying on it.
 
 ## Quick start (Docker Compose)
 
