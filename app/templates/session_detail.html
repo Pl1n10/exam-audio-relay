@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}{{ sess.title }} — {{ app_name }}{% endblock %}
+{% block content %}
+{% set link = (base_url ~ '/s/' ~ sess.token) if base_url else ('/s/' ~ sess.token) %}
+<div class="row">
+  <h1>{{ sess.title }}</h1>
+  <span class="status status-{{ status.value }}">{{ status.value }}</span>
+</div>
+
+<section class="card">
+  <p><strong>Audio file:</strong> {{ sess.audio_file.display_name }}
+    <span class="muted">({{ sess.audio_file.original_filename }})</span></p>
+  {% if current_user.is_superadmin %}
+  <p><strong>Owner:</strong> {{ sess.owner.username }}</p>
+  {% endif %}
+  <p><strong>Starts at:</strong> {{ sess.starts_at|local_dt }}</p>
+  <p><strong>Ends at:</strong> {{ sess.ends_at|local_dt }}</p>
+  {% if sess.max_access_count %}<p><strong>Max access count:</strong> {{ sess.max_access_count }}</p>{% endif %}
+  {% if sess.revoked_at %}<p class="error">Revoked at {{ sess.revoked_at|local_dt }}</p>{% endif %}
+  {% if sess.notes %}<p><strong>Notes:</strong> {{ sess.notes }}</p>{% endif %}
+  <p><strong>Page views:</strong> {{ access_count }}</p>
+
+  <p>
+    <strong>Student link:</strong>
+    <code class="token">{{ link }}</code>
+    <button type="button" class="link" onclick="copyToClipboard('{{ link }}', this)">Copy</button>
+    <a class="link" href="/s/{{ sess.token }}" target="_blank" rel="noopener">Open</a>
+  </p>
+
+  <p>
+    <a href="/admin/sessions/{{ sess.id }}/logs">View access logs</a>
+  </p>
+
+  <div class="row">
+    {% if not sess.revoked_at %}
+    <form method="post" action="/admin/sessions/{{ sess.id }}/revoke">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+      <button type="submit" class="danger" onclick="return confirm('Revoke this session?')">Revoke</button>
+    </form>
+    {% endif %}
+    <form method="post" action="/admin/sessions/{{ sess.id }}/delete">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+      <button type="submit" class="danger" onclick="return confirm('Delete session permanently? Logs will be cleared.')">Delete</button>
+    </form>
+  </div>
+</section>
+{% endblock %}

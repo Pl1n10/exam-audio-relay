@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="referrer" content="no-referrer" />
+  <title>{{ sess.title }}</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body class="public">
+  <main class="container narrow center">
+    <h1>{{ sess.title }}</h1>
+    {% if sess.notes %}
+      <p class="notes">{{ sess.notes }}</p>
+    {% endif %}
+    <audio controls preload="metadata" controlsList="nodownload" oncontextmenu="return false;">
+      <source src="/stream/{{ token }}" type="{{ sess.audio_file.content_type }}" />
+      Your browser does not support audio playback.
+    </audio>
+    <p class="muted">
+      Available until: <span id="ends-at" data-ends="{{ sess.ends_at.isoformat() }}"></span>
+      &middot; <span id="time-remaining"></span>
+    </p>
+    <p class="footer-note">Do not share this link.</p>
+  </main>
+  <script>
+    (function () {
+      const endsEl = document.getElementById('ends-at');
+      const remainEl = document.getElementById('time-remaining');
+      if (!endsEl) return;
+      const endsAt = new Date(endsEl.dataset.ends);
+      endsEl.textContent = endsAt.toLocaleString();
+      function tick() {
+        const ms = endsAt - new Date();
+        if (ms <= 0) {
+          remainEl.textContent = 'expired — refresh page';
+          return;
+        }
+        const s = Math.floor(ms / 1000);
+        const h = Math.floor(s / 3600);
+        const m = Math.floor((s % 3600) / 60);
+        const sec = s % 60;
+        remainEl.textContent = (h > 0 ? h + 'h ' : '') + m + 'm ' + sec + 's remaining';
+      }
+      tick();
+      setInterval(tick, 1000);
+    })();
+  </script>
+</body>
+</html>

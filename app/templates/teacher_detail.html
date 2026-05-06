@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}{{ teacher.username }} — {{ app_name }}{% endblock %}
+{% block content %}
+<h1>Teacher: {{ teacher.username }}</h1>
+<p><a href="/admin/teachers">&larr; All teachers</a></p>
+
+{% if request.query_params.get('reset') == 'ok' %}<div class="info">Password updated.</div>{% endif %}
+{% if error %}<div class="error">{{ error }}</div>{% endif %}
+
+<section class="card narrow">
+  <p><strong>Display name:</strong> {{ teacher.display_name }}</p>
+  <p><strong>Email:</strong> {{ teacher.email or '—' }}</p>
+  <p><strong>Role:</strong> {{ teacher.role }}</p>
+  <p><strong>Active:</strong> {{ 'yes' if teacher.is_active else 'no' }}</p>
+  <p><strong>Created:</strong> {{ teacher.created_at|local_dt }}</p>
+
+  <h2>Actions</h2>
+
+  <form method="post" action="/admin/teachers/{{ teacher.id }}/toggle-active" style="display:inline">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+    <button type="submit" class="{{ 'danger' if teacher.is_active else '' }}"
+            {% if not can_disable and teacher.is_active %}disabled title="Last active superadmin"{% endif %}>
+      {{ 'Disable' if teacher.is_active else 'Enable' }}
+    </button>
+  </form>
+
+  <form method="post" action="/admin/teachers/{{ teacher.id }}/role" style="display:inline">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+    <select name="role">
+      <option value="teacher" {% if teacher.role == 'teacher' %}selected{% endif %}>teacher</option>
+      <option value="superadmin" {% if teacher.role == 'superadmin' %}selected{% endif %}>superadmin</option>
+    </select>
+    <button type="submit" {% if not can_demote %}disabled title="Last active superadmin"{% endif %}>Set role</button>
+  </form>
+
+  <hr />
+
+  <h2>Reset password</h2>
+  <form method="post" action="/admin/teachers/{{ teacher.id }}/reset-password">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+    <label>New password (min 8 chars)
+      <input type="password" name="new_password" minlength="8" required />
+    </label>
+    <button type="submit">Reset password</button>
+  </form>
+</section>
+{% endblock %}

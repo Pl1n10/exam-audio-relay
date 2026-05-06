@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Files — {{ app_name }}{% endblock %}
+{% block content %}
+<div class="row">
+  <h1>Audio files</h1>
+  <a class="button" href="/admin/upload">+ Upload</a>
+</div>
+
+{% if files %}
+<table class="data">
+  <thead>
+    <tr>
+      <th>Name</th>
+      {% if current_user.is_superadmin %}<th>Owner</th>{% endif %}
+      <th>Original</th><th>Type</th><th>Size</th><th>Sessions</th><th>Created</th><th></th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for f in files %}
+    <tr>
+      <td>{{ f.display_name }}</td>
+      {% if current_user.is_superadmin %}<td>{{ f.owner.username }}</td>{% endif %}
+      <td><code>{{ f.original_filename }}</code></td>
+      <td>{{ f.content_type }}</td>
+      <td>{{ (f.size_bytes / 1024 / 1024) | round(1) }} MB</td>
+      <td>{{ f.sessions|length }}</td>
+      <td>{{ f.created_at|local_dt }}</td>
+      <td>
+        <form method="post" action="/admin/files/{{ f.id }}/delete" style="display:inline"
+              onsubmit="return confirm('Delete this file?')">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+          <button type="submit" class="danger" {% if f.sessions %}disabled title="Has sessions"{% endif %}>Delete</button>
+        </form>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="muted">No files yet.</p>
+{% endif %}
+{% endblock %}

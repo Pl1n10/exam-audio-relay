@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Logs: {{ sess.title }} — {{ app_name }}{% endblock %}
+{% block content %}
+<h1>Access logs — {{ sess.title }}</h1>
+<p><a href="/admin/sessions/{{ sess.id }}">&larr; Back to session</a></p>
+
+{% if logs %}
+<table class="data">
+  <thead>
+    <tr><th>Time</th><th>Event</th><th>IP</th><th>User agent</th></tr>
+  </thead>
+  <tbody>
+  {% for l in logs %}
+    <tr>
+      <td>{{ l.created_at|local_dt }}</td>
+      <td>{{ l.event_type }}</td>
+      <td><code>{{ l.ip_address or '-' }}</code></td>
+      <td class="ua">{{ l.user_agent or '-' }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="muted">No log entries yet.</p>
+{% endif %}
+{% endblock %}

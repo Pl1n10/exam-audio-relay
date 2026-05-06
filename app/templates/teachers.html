@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Teachers — {{ app_name }}{% endblock %}
+{% block content %}
+<div class="row">
+  <h1>Teachers</h1>
+  <a class="button" href="/admin/teachers/new">+ New teacher</a>
+</div>
+
+<table class="data">
+  <thead>
+    <tr><th>Username</th><th>Display name</th><th>Email</th><th>Role</th><th>Active</th><th>Created</th></tr>
+  </thead>
+  <tbody>
+  {% for t in teachers %}
+    <tr>
+      <td><a href="/admin/teachers/{{ t.id }}">{{ t.username }}</a></td>
+      <td>{{ t.display_name }}</td>
+      <td>{{ t.email or '' }}</td>
+      <td>{{ t.role }}</td>
+      <td>{% if t.is_active %}yes{% else %}<span class="muted">no</span>{% endif %}</td>
+      <td>{{ t.created_at|local_dt }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

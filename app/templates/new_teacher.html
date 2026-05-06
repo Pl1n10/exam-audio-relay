@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}New teacher — {{ app_name }}{% endblock %}
+{% block content %}
+<section class="card narrow">
+  <h1>New teacher</h1>
+  {% if error %}<div class="error">{{ error }}</div>{% endif %}
+  <form method="post" action="/admin/teachers/new">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+    <label>Username
+      <input type="text" name="username" required maxlength="64" autocomplete="off" />
+    </label>
+    <label>Display name
+      <input type="text" name="display_name" maxlength="120" />
+    </label>
+    <label>Email (optional)
+      <input type="email" name="email" maxlength="255" />
+    </label>
+    <label>Role
+      <select name="role">
+        <option value="teacher" selected>teacher</option>
+        <option value="superadmin">superadmin</option>
+      </select>
+    </label>
+    <label>Initial password (min 8 chars)
+      <input type="password" name="password" minlength="8" required autocomplete="new-password" />
+    </label>
+    <button type="submit">Create teacher</button>
+  </form>
+</section>
+{% endblock %}

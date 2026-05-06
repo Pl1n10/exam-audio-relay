@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — {{ app_name }}{% endblock %}
+{% block content %}
+<h1>Dashboard</h1>
+
+<section class="card">
+  <div class="row">
+    <h2>Sessions</h2>
+    <a class="button" href="/admin/sessions/new">+ New session</a>
+  </div>
+  {% if sessions %}
+  <table class="data">
+    <thead>
+      <tr>
+        <th>Title</th>
+        {% if current_user.is_superadmin %}<th>Owner</th>{% endif %}
+        <th>Status</th><th>Start</th><th>End</th><th>Access</th><th>Link</th><th></th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for s in sessions %}
+      {% set st = derive_status(s) %}
+      <tr>
+        <td><a href="/admin/sessions/{{ s.id }}">{{ s.title }}</a></td>
+        {% if current_user.is_superadmin %}<td>{{ s.owner.username }}</td>{% endif %}
+        <td><span class="status status-{{ st.value }}">{{ st.value }}</span></td>
+        <td>{{ s.starts_at|local_dt }}</td>
+        <td>{{ s.ends_at|local_dt }}</td>
+        <td>{{ access_counts.get(s.id, 0) }}</td>
+        <td>
+          {% set link = (base_url ~ '/s/' ~ s.token) if base_url else ('/s/' ~ s.token) %}
+          <code class="token">{{ link }}</code>
+          <button type="button" class="link" onclick="copyToClipboard('{{ link }}', this)">Copy</button>
+        </td>
+        <td>
+          {% if not s.revoked_at %}
+          <form method="post" action="/admin/sessions/{{ s.id }}/revoke" style="display:inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+            <button class="danger" type="submit" onclick="return confirm('Revoke this session?')">Revoke</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">No sessions yet. <a href="/admin/sessions/new">Create one</a>.</p>
+  {% endif %}
+</section>
+
+<section class="card">
+  <div class="row">
+    <h2>Audio files</h2>
+    <a class="button" href="/admin/upload">+ Upload</a>
+  </div>
+  {% if files %}
+  <table class="data">
+    <thead><tr><th>Name</th>{% if current_user.is_superadmin %}<th>Owner</th>{% endif %}<th>Original</th><th>Size</th><th>Created</th></tr></thead>
+    <tbody>
+    {% for f in files %}
+      <tr>
+        <td>{{ f.display_name }}</td>
+        {% if current_user.is_superadmin %}<td>{{ f.owner.username }}</td>{% endif %}
+        <td><code>{{ f.original_filename }}</code></td>
+        <td>{{ (f.size_bytes / 1024 / 1024) | round(1) }} MB</td>
+        <td>{{ f.created_at|local_dt }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">No files yet. <a href="/admin/upload">Upload one</a>.</p>
+  {% endif %}
+</section>
+
+{% if current_user.is_superadmin and teachers %}
+<section class="card">
+  <div class="row">
+    <h2>Teachers</h2>
+    <a class="button" href="/admin/teachers/new">+ New teacher</a>
+  </div>
+  <table class="data">
+    <thead><tr><th>Username</th><th>Name</th><th>Role</th><th>Active</th></tr></thead>
+    <tbody>
+    {% for t in teachers %}
+      <tr>
+        <td><a href="/admin/teachers/{{ t.id }}">{{ t.username }}</a></td>
+        <td>{{ t.display_name }}</td>
+        <td>{{ t.role }}</td>
+        <td>{% if t.is_active %}yes{% else %}<span class="muted">no</span>{% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endif %}
+{% endblock %}

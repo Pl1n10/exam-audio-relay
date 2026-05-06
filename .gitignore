@@ -1,0 +1,23 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.sqlite3
+*.db
+
+# Project data
+data/uploads/*
+!data/uploads/.gitkeep
+data/*.db
+
+# IDE
+.idea/
+.vscode/
+
+# Claude Code local settings (per-user)
+.claude/settings.local.json

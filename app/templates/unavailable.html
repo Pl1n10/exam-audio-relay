@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Session unavailable</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body class="public">
+  <main class="container narrow center">
+    <h1>Session unavailable</h1>
+    <p class="muted">{{ message or "This session is not available." }}</p>
+    {% if starts_at %}
+    <p>Scheduled to start at: <strong>{{ starts_at|local_dt }}</strong></p>
+    {% endif %}
+  </main>
+</body>
+</html>

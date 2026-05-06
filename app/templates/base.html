@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}{{ app_name }}{% endblock %}</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/admin">{{ app_name }}</a>
+    {% if current_user %}
+    <nav>
+      <a href="/admin">Dashboard</a>
+      <a href="/admin/files">Files</a>
+      <a href="/admin/upload">Upload</a>
+      <a href="/admin/sessions/new">New session</a>
+      {% if current_user.is_superadmin %}
+        <a href="/admin/teachers">Teachers</a>
+      {% endif %}
+      <span class="user">{{ current_user.display_name or current_user.username }}{% if current_user.is_superadmin %} (admin){% endif %}</span>
+      <form method="post" action="/logout" style="display:inline">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+        <button class="link" type="submit">Logout</button>
+      </form>
+    </nav>
+    {% endif %}
+  </header>
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="footer"><small>{{ app_name }}</small></footer>
+  <script>
+    function copyToClipboard(text, btn) {
+      const fallback = () => {
+        const ta = document.createElement('textarea');
+        ta.value = text; document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); } catch (e) {}
+        document.body.removeChild(ta);
+      };
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).catch(fallback);
+      } else { fallback(); }
+      if (btn) {
+        const old = btn.textContent;
+        btn.textContent = 'Copied';
+        setTimeout(() => { btn.textContent = old; }, 1200);
+      }
+    }
+  </script>
+</body>
+</html>

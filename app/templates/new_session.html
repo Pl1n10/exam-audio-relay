@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}New session — {{ app_name }}{% endblock %}
+{% block content %}
+<section class="card narrow">
+  <h1>New session</h1>
+  {% if error %}<div class="error">{{ error }}</div>{% endif %}
+  {% if not files %}
+  <p class="muted">You need to <a href="/admin/upload">upload an audio file</a> first.</p>
+  {% else %}
+  <form method="post" action="/admin/sessions/new" id="newsession">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+
+    <label>Title
+      <input type="text" name="title" required maxlength="255" />
+    </label>
+
+    <label>Audio file
+      <select name="audio_file_id" required>
+        {% for f in files %}
+          <option value="{{ f.id }}">{{ f.display_name }}{% if current_user.is_superadmin %} — {{ f.owner.username }}{% endif %}</option>
+        {% endfor %}
+      </select>
+    </label>
+
+    <fieldset>
+      <legend>Schedule</legend>
+      <label class="inline">
+        <input type="radio" name="mode" value="scheduled" checked /> Scheduled (start/end)
+      </label>
+      <label class="inline">
+        <input type="radio" name="mode" value="now" /> Start now for N minutes
+      </label>
+    </fieldset>
+
+    <div data-mode="scheduled">
+      <label>Starts at
+        <input type="datetime-local" name="starts_at" />
+      </label>
+      <label>Ends at
+        <input type="datetime-local" name="ends_at" />
+      </label>
+    </div>
+
+    <div data-mode="now" hidden>
+      <label>Duration
+        <select name="duration_minutes">
+          <option value="15">15 minutes</option>
+          <option value="30">30 minutes</option>
+          <option value="45">45 minutes</option>
+          <option value="60" selected>60 minutes</option>
+          <option value="90">90 minutes</option>
+          <option value="120">120 minutes</option>
+        </select>
+      </label>
+    </div>
+
+    <label>Max access count (optional, blank = unlimited)
+      <input type="number" name="max_access_count" min="1" />
+    </label>
+
+    <label>Notes shown to student (optional)
+      <textarea name="notes" rows="3" maxlength="2000"></textarea>
+    </label>
+
+    <button type="submit">Create session</button>
+  </form>
+  {% endif %}
+</section>
+<script>
+  (function () {
+    const form = document.getElementById('newsession');
+    if (!form) return;
+    function refresh() {
+      const mode = (form.querySelector('input[name=mode]:checked') || {}).value || 'scheduled';
+      form.querySelectorAll('[data-mode]').forEach(el => { el.hidden = el.dataset.mode !== mode; });
+      form.querySelector('input[name=starts_at]').required = mode === 'scheduled';
+      form.querySelector('input[name=ends_at]').required = mode === 'scheduled';
+    }
+    form.addEventListener('change', refresh);
+    refresh();
+  })();
+</script>
+{% endblock %}
