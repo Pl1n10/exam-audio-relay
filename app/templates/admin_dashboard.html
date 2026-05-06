@@ -28,9 +28,13 @@
         <td>{{ s.ends_at|local_dt }}</td>
         <td>{{ access_counts.get(s.id, 0) }}</td>
         <td>
-          {% set link = (base_url ~ '/s/' ~ s.token) if base_url else ('/s/' ~ s.token) %}
-          <code class="token">{{ link }}</code>
-          <button type="button" class="link" onclick="copyToClipboard('{{ link }}', this)">Copy</button>
+          {% set rel = '/s/' ~ s.token %}
+          {% set full = (base_url ~ rel) if base_url else '' %}
+          <span class="link-actions" data-rel="{{ rel }}" data-full="{{ full }}" data-share-title="{{ s.title }}">
+            <a class="btn-sm" href="{{ full or rel }}" target="_blank" rel="noopener">Open</a>
+            <button type="button" class="btn-sm" data-action="copy">Copy full link</button>
+            <button type="button" class="btn-sm" data-action="share" hidden>Share</button>
+          </span>
         </td>
         <td>
           {% if not s.revoked_at %}

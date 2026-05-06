@@ -47,6 +47,45 @@
         setTimeout(() => { btn.textContent = old; }, 1200);
       }
     }
+
+    function resolveSessionUrl(container) {
+      if (!container) return '';
+      return container.dataset.full || (window.location.origin + (container.dataset.rel || ''));
+    }
+
+    document.addEventListener('click', function (ev) {
+      const btn = ev.target.closest('[data-action]');
+      if (!btn) return;
+      const container = btn.closest('.link-actions');
+      if (!container) return;
+      const url = resolveSessionUrl(container);
+      if (!url) return;
+      if (btn.dataset.action === 'copy') {
+        copyToClipboard(url, btn);
+      } else if (btn.dataset.action === 'share' && navigator.share) {
+        navigator.share({
+          url: url,
+          title: container.dataset.shareTitle || 'Exam session',
+        }).catch(function () {});
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+      // Reveal Share buttons only if the browser supports the Web Share API.
+      if (navigator.share) {
+        document.querySelectorAll('[data-action="share"]').forEach(function (b) {
+          b.hidden = false;
+        });
+      }
+      // If the server didn't render an absolute URL (no BASE_URL), fill in the
+      // displayed token-code with the resolved full URL so teachers see the
+      // exact string the Copy button will copy.
+      document.querySelectorAll('code.token[data-rel]').forEach(function (el) {
+        if (!el.dataset.full) {
+          el.textContent = window.location.origin + el.dataset.rel;
+        }
+      });
+    });
   </script>
 </body>
 </html>

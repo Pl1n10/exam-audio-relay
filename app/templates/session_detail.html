@@ -1,7 +1,8 @@
 {% extends "base.html" %}
 {% block title %}{{ sess.title }} — {{ app_name }}{% endblock %}
 {% block content %}
-{% set link = (base_url ~ '/s/' ~ sess.token) if base_url else ('/s/' ~ sess.token) %}
+{% set rel = '/s/' ~ sess.token %}
+{% set full = (base_url ~ rel) if base_url else '' %}
 <div class="row">
   <h1>{{ sess.title }}</h1>
   <span class="status status-{{ status.value }}">{{ status.value }}</span>
@@ -20,12 +21,19 @@
   {% if sess.notes %}<p><strong>Notes:</strong> {{ sess.notes }}</p>{% endif %}
   <p><strong>Page views:</strong> {{ access_count }}</p>
 
-  <p>
-    <strong>Student link:</strong>
-    <code class="token">{{ link }}</code>
-    <button type="button" class="link" onclick="copyToClipboard('{{ link }}', this)">Copy</button>
-    <a class="link" href="/s/{{ sess.token }}" target="_blank" rel="noopener">Open</a>
+  <p><strong>Student link</strong></p>
+  <p class="link-row">
+    <code class="token" data-rel="{{ rel }}" data-full="{{ full }}">{{ full or rel }}</code>
+    <span class="link-actions" data-rel="{{ rel }}" data-full="{{ full }}" data-share-title="{{ sess.title }}">
+      <a class="btn-sm" href="{{ full or rel }}" target="_blank" rel="noopener">Open</a>
+      <button type="button" class="btn-sm" data-action="copy">Copy full link</button>
+      <button type="button" class="btn-sm" data-action="share" hidden>Share</button>
+    </span>
   </p>
+  {% if not full %}
+  <p class="muted footer-note">Tip: set <code>BASE_URL</code> in your environment to render the
+    full public URL (e.g. your Tailscale Funnel hostname) in the dashboard.</p>
+  {% endif %}
 
   <p>
     <a href="/admin/sessions/{{ sess.id }}/logs">View access logs</a>
