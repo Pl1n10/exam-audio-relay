@@ -31,7 +31,12 @@ def login_submit(
 ):
     user = db.scalar(select(User).where(User.username == username))
     if user is None or not user.is_active or not verify_password(password, user.password_hash):
-        return render(request, "login.html", error="Invalid credentials or account disabled")
+        return render(
+            request,
+            "login.html",
+            error="Invalid credentials or account disabled",
+            status_code=status.HTTP_401_UNAUTHORIZED,
+        )
     login_user(request, user)
     return RedirectResponse("/admin", status_code=status.HTTP_303_SEE_OTHER)
 
