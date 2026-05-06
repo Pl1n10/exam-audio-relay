@@ -191,11 +191,22 @@ def new_session_submit(
     starts_at: str | None = Form(None),
     ends_at: str | None = Form(None),
     duration_minutes: int | None = Form(None),
-    max_access_count: int | None = Form(None),
+    max_access_count: str | None = Form(None),
     notes: str = Form(""),
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    raw_max = (max_access_count or "").strip()
+    if not raw_max:
+        max_access_count_value: int | None = None
+    else:
+        try:
+            max_access_count_value = int(raw_max)
+        except ValueError:
+            return _new_session_error(request, user, db, "Invalid max access count")
+        if max_access_count_value <= 0:
+            max_access_count_value = None
+
     audio = db.get(AudioFile, audio_file_id)
     if audio is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Audio file not found")
@@ -219,9 +230,6 @@ def new_session_submit(
     if end_utc <= start_utc:
         return _new_session_error(request, user, db, "End must be after start")
 
-    if max_access_count is not None and max_access_count <= 0:
-        max_access_count = None
-
     session = ExamSession(
         owner_user_id=audio.owner_user_id if user.role == Role.SUPERADMIN.value else user.id,
         audio_file_id=audio.id,
@@ -229,7 +237,7 @@ def new_session_submit(
         token=generate_session_token(),
         starts_at=start_utc,
         ends_at=end_utc,
-        max_access_count=max_access_count,
+        max_access_count=max_access_count_value,
         notes=(notes or "").strip() or None,
     )
     db.add(session)
