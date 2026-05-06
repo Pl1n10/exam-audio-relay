@@ -13,16 +13,69 @@
     {% if sess.notes %}
       <p class="notes">{{ sess.notes }}</p>
     {% endif %}
-    <audio controls preload="metadata" controlsList="nodownload" oncontextmenu="return false;">
+    <audio
+      id="exam-audio"
+      preload="metadata"
+      controlsList="nodownload noplaybackrate noremoteplayback"
+      disablepictureinpicture
+      disableremoteplayback
+      oncontextmenu="return false;">
       <source src="/stream/{{ token }}" type="{{ sess.audio_file.content_type }}" />
       Your browser does not support audio playback.
     </audio>
+    <div class="player">
+      <button id="play-btn" type="button" class="play-btn" aria-label="Play audio">Play</button>
+      <span id="play-status" class="muted" aria-live="polite"></span>
+    </div>
     <p class="muted">
       Available until: <span id="ends-at" data-ends="{{ sess.ends_at.isoformat() }}"></span>
       &middot; <span id="time-remaining"></span>
     </p>
     <p class="footer-note">Do not share this link.</p>
   </main>
+  <script>
+    (function () {
+      const audio = document.getElementById('exam-audio');
+      const btn = document.getElementById('play-btn');
+      const statusEl = document.getElementById('play-status');
+
+      if (audio) {
+        audio.playbackRate = 1.0;
+        audio.addEventListener('ratechange', function () {
+          if (audio.playbackRate !== 1.0) audio.playbackRate = 1.0;
+        });
+        audio.addEventListener('play', function () {
+          btn.disabled = true;
+          btn.textContent = 'Playing';
+          if (statusEl) statusEl.textContent = '';
+        });
+        audio.addEventListener('ended', function () {
+          btn.disabled = true;
+          btn.textContent = 'Done';
+          if (statusEl) statusEl.textContent = 'Playback finished.';
+        });
+        audio.addEventListener('error', function () {
+          btn.disabled = true;
+          btn.textContent = 'Unavailable';
+          if (statusEl) statusEl.textContent = 'Audio unavailable.';
+        });
+      }
+
+      if (btn) {
+        btn.addEventListener('click', function () {
+          if (!audio || !audio.paused) return;
+          const p = audio.play();
+          if (p && typeof p.catch === 'function') {
+            p.catch(function () {
+              btn.disabled = false;
+              btn.textContent = 'Play';
+              if (statusEl) statusEl.textContent = 'Tap Play to start.';
+            });
+          }
+        });
+      }
+    })();
+  </script>
   <script>
     (function () {
       const endsEl = document.getElementById('ends-at');
